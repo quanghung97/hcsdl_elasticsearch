@@ -1,58 +1,31 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+Tài liệu bắt buộc phải xem:
+https://github.com/elasticquent/Elasticquent (phần này dùng để đánh chỉ số index và các kiểu tim kiếm cơ bản)
+https://github.com/elastic/elasticsearch-php  (phần này dùng để tìm kiếm nâng cao hơn so với elasticquent, về mặt chung thì có thể coi elasticquent kế thừa từ phần này)
+2 đường link trên có liên quan tới nhau
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+https://www.elastic.co/guide/en/elasticsearch/client/php-api/current/index.html
+đường link này giải thích rõ cơ chế kết hợp giữa elasticsearch trong php và đây là phần quan trọng nhất là nguồn gốc của 2 trang github kia.
 
-## About Laravel
+Giới Thiệu:
+Elasticsearch là gì?
+	Elasticsearch là một công cụ tìm kiếm và phân tích mã nguồn mở có khả năng mở rộng rất cao. Nó cho phép chúng tôi lưu trữ, tìm kiếm và phân tích khối lượng lớn dữ liệu một cách nhanh chóng và trong thời gian thực gần.
+	Để rõ hơn ngay trên trang chủ đã giới thiệu rất kĩ về elastic.
+	https://www.elastic.co/products/elasticsearch
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
-
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Pulse Storm](http://www.pulsestorm.net/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Cài Đặt:
+Bước 1 : cài đặt jdk java trên máy chủ hệ điều hành centos - linux
+Bước 2 : - Hiện tại trang cơ sở dữ liệu ntbic ver2 đang dùng elastic 5.4.0
+- Dowload file .deb https://www.elastic.co/downloads/past-releases/elasticsearch-5-4-0 và cài đặt file .deb trên centos
+- Dowload database ntbic tại https://www.dropbox.com/s/9uj6rzxl8ui1kg7/ntbic_database.sql?dl=0
+Bước 3 : - Clone project https://github.com/quanghung97/database-ntbic-ver2
+- trỏ đường thư mục root sang thư mục project sau đó run terminal
+composer update
+php artisan key:generate
+……..
+thiết lập kết nối với database …
+đây là cac bước cơ bản sau khi pull về project
+Bươc 4 : - Khởi tạo Database trong elastic kết nối với database mysql thuần
+gõ terminal
+……/name_project/php artisan tinker
+	App\ten_model::addAllToIndex();
+ten_model:chuyen_gia_khcn,de_tai_du_an_cac_cap,doanh_nghiep_khcn,linh_vuc_san_pham,loai_phat_minh_sang_che,san_pham,tinh_thanh_pho,bang_phat_minh_sang_che
