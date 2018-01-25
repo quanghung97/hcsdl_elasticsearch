@@ -18,14 +18,14 @@ Elasticsearch là gì?
 <br>
 Cài Đặt:
 <br>
-Bước 1 : cài đặt jdk java trên máy chủ hệ điều hành centos - linux
+Bước 1 : cài đặt jdk java trên máy chủ hệ điều hành window linux
 <br>
-Bước 2 : - Hiện tại trang cơ sở dữ liệu ntbic ver2 đang dùng elastic 5.4.0
+Bước 2 : - Hiện tại trang cơ sở dữ liệu đang dùng elastic 5.4.0
 <br>
-- Dowload file .deb https://www.elastic.co/downloads/past-releases/elasticsearch-5-4-0 và cài đặt file .deb trên centos
-- Dowload database ntbic tại https://www.dropbox.com/s/9uj6rzxl8ui1kg7/ntbic_database.sql?dl=0
+- Dowload file .deb https://www.elastic.co/downloads/past-releases/elasticsearch-5-4-0 và cài đặt file .deb trên linux conf window cung co ban exe
+
 <br>
-Bước 3 : - Clone project https://github.com/quanghung97/database-ntbic-ver2
+Bước 3 : - Clone project https://github.com/quanghung97/hcsdl_elasticsearch
 - trỏ đường thư mục root sang thư mục project sau đó run terminal
 composer update
 php artisan key:generate
