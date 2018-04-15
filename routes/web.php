@@ -20,3 +20,6 @@ Route::get('/generic',function(){
 Route::get('/elements',function(){
   return view('elements');
 })->name('elements');
+Route::get('/layouts',function(){
+  return view('layouts.layouts');
+});
