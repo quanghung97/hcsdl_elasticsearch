@@ -10,10 +10,9 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+include_once 'backend/admin.php';
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
 Route::get('/generic',function(){
   return view('generic');
 })->name('generic');
