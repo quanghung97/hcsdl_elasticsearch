@@ -1,58 +1,46 @@
 <?php
 
-namespace App\Http\Controllers\chuyen_gia;
+namespace App\Http\Controllers\phat_minh;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
-use Cookie;
-use App\chuyen_gia_khcn;
-use App\tinh_thanh_pho;
-use App\hoc_vi;
+use App\bang_phat_minh_sang_che;
+use App\linh_vuc_san_pham;
+use App\loai_phat_minh_sang_che;
 
 use Elasticsearch\ClientBuilder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+
 class SearchController extends Controller
 {
-  public function getSearch(Request $request)
-  {
-        //chuyen_gia_khcn::addAllToIndex();
-    $time_search = -microtime(true);
-    $item_per_page = 10;
-    $tt = tinh_thanh_pho::all();
-    $hv = hoc_vi::all();
-    /*Truyền vào text và các option*/
-    $text_search = $request->text_search;
-    $tim_theo = $request->tim_theo;
-    $linh_vuc_khcn = $request->linh_vuc_khcn;
-    $chuc_danh = $request->chuc_danh;
-    $tinh_thanh = $request->tinh_thanh_pho;
-    //$chuc_danh = mb_strtolower($chuc_danh);
-    //$chuc_danhs = explode(' ', $chuc_danh);
-    /*
-      Tìm theo: Truyền vào 1 số nguyên
-      1: Tên nhà KH
-      2: Lĩnh vực nghiên cứu
-      3: Hướng nghiên cứu
-      4: Cơ quan công tác
-    */
+	public function getSearch(Request $request) {
+		$time_search = -microtime(true);
+		$per_page = 10;
+		$linh_vuc = linh_vuc_san_pham::all();
+		$loai_phat_minh = loai_phat_minh_sang_che::all();
+		/*Truyền vào text và các option*/
+		$text_search = $request->text_search;
+		$tim_theo = $request->tim_theo;
+		$linh_vuc_khcn = $request->linh_vuc_khcn;
+		$loai_phat_minh_sang_che = $request->loai;
+//		$text_search = mb_strtolower($text_search);
+//		$text_searchs = explode(' ', $text_search);
+		/*Tìm theo: truyền vào 1 số nguyên
+			1: tên phát minh, sáng chế, giải pháp
+			2: điểm nổi bật
+			3: tác giả
+		*/
 
         //api client
         $client = ClientBuilder::create()->build();
-
-//        if($tinh_thanh == null){
-//            $tinh_thanh = "";
-//        }
-//         if($chuc_danh == null){
-//            $chuc_danh = "";
-//        }
-        if($text_search != ''){
+        if($text_search != null){
             if($tim_theo == 1){
-                if($tinh_thanh != null && $chuc_danh != null){
+                if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -60,7 +48,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'ho_va_ten' => $text_search
+                                            'ten' => $text_search
                                         ]],
 
                                     ],
@@ -68,10 +56,10 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
                                                 ]],
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -80,7 +68,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['ho_va_ten' => [
+                                    ['ten' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -90,12 +78,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                    //dd($results);
-                    //dd($results['hits']['hits'][0]);
-                } else if($tinh_thanh == null && $chuc_danh != null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -103,15 +89,16 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'ho_va_ten' => $text_search
+                                            'ten' => $text_search
                                         ]],
 
                                     ],
                                     'filter' => [
                                         'bool' => [
                                             'must' => [
+
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -120,7 +107,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['ho_va_ten' => [
+                                    ['ten' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -130,10 +117,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh != null && $chuc_danh == null){
+                }else if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -141,7 +128,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'ho_va_ten' => $text_search
+                                            'ten' => $text_search
                                         ]],
 
                                     ],
@@ -149,9 +136,8 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
-                                                ]],
-
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
+                                                ]]
                                             ]
                                         ]
                                     ]
@@ -159,7 +145,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['ho_va_ten' => [
+                                    ['ten' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -169,12 +155,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
-
-                } else if($tinh_thanh == null && $chuc_danh == null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -182,16 +166,15 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'ho_va_ten' => $text_search
+                                            'ten' => $text_search
                                         ]],
 
-                                    ],
-
+                                    ]
                                 ]
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['ho_va_ten' => [
+                                    ['ten' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -201,13 +184,12 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
                 }
-            } else if($tim_theo == 2){
-                    if($tinh_thanh != null && $chuc_danh != null){
+            }else if($tim_theo == 2){
+                if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -215,7 +197,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'chuyen_nganh' => $text_search
+                                            'diem_noi_bat' => $text_search
                                         ]],
 
                                     ],
@@ -223,10 +205,10 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
                                                 ]],
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -235,7 +217,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['chuyen_nganh' => [
+                                    ['diem_noi_bat' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -245,11 +227,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
-                } else if($tinh_thanh == null && $chuc_danh != null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -257,7 +238,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'chuyen_nganh' => $text_search
+                                            'diem_noi_bat' => $text_search
                                         ]],
 
                                     ],
@@ -266,7 +247,7 @@ class SearchController extends Controller
                                             'must' => [
 
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -275,7 +256,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['chuyen_nganh' => [
+                                    ['diem_noi_bat' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -285,10 +266,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh != null && $chuc_danh == null){
+                }else if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -296,7 +277,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'chuyen_nganh' => $text_search
+                                            'diem_noi_bat' => $text_search
                                         ]],
 
                                     ],
@@ -304,9 +285,8 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
-                                                ]],
-
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
+                                                ]]
                                             ]
                                         ]
                                     ]
@@ -314,7 +294,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['chuyen_nganh' => [
+                                    ['diem_noi_bat' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -324,12 +304,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
-
-                } else if($tinh_thanh == null && $chuc_danh == null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -337,7 +315,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'chuyen_nganh' => $text_search
+                                            'diem_noi_bat' => $text_search
                                         ]],
 
                                     ]
@@ -345,7 +323,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['chuyen_nganh' => [
+                                    ['diem_noi_bat' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -355,13 +333,12 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
                 }
-            } else if($tim_theo == 3){
-                    if($tinh_thanh != null && $chuc_danh != null){
+            }else if($tim_theo == 3){
+                if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -369,7 +346,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'huong_nghien_cuu' => $text_search
+                                            'tac_gia' => $text_search
                                         ]],
 
                                     ],
@@ -377,10 +354,10 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
                                                 ]],
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -389,7 +366,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['huong_nghien_cuu' => [
+                                    ['tac_gia' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -399,10 +376,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh == null && $chuc_danh != null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -410,7 +387,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'huong_nghien_cuu' => $text_search
+                                            'tac_gia' => $text_search
                                         ]],
 
                                     ],
@@ -419,7 +396,7 @@ class SearchController extends Controller
                                             'must' => [
 
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -428,7 +405,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['huong_nghien_cuu' => [
+                                    ['tac_gia' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -438,10 +415,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh != null && $chuc_danh == null){
+                }else if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -449,7 +426,7 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'huong_nghien_cuu' => $text_search
+                                            'tac_gia' => $text_search
                                         ]],
 
                                     ],
@@ -457,9 +434,8 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
-                                                ]],
-
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
+                                                ]]
                                             ]
                                         ]
                                     ]
@@ -467,7 +443,7 @@ class SearchController extends Controller
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['huong_nghien_cuu' => [
+                                    ['tac_gia' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -477,12 +453,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
-
-                } else if($tinh_thanh == null && $chuc_danh == null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -490,16 +464,15 @@ class SearchController extends Controller
                                 'bool' => [
                                     'must' => [
                                         ['match' => [
-                                            'huong_nghien_cuu' => $text_search
+                                            'tac_gia' => $text_search
                                         ]],
 
-                                    ],
-
+                                    ]
                                 ]
                             ],
                             'highlight' => [
                                 'fields' => [
-                                    ['huong_nghien_cuu' => [
+                                    ['tac_gia' => [
                                         'force_source' => true
                                     ]]
                                   //  '*' => (Object)[],
@@ -509,166 +482,12 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
                 }
-            } else if($tim_theo == 4){
-                    if($tinh_thanh != null && $chuc_danh != null){
+            }else{
+                if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
-                        'from' => 0,   // <--- Start at #1
-                        'size' => 10000, // <--- And retrieve 10 docs
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['match' => [
-                                            'co_quan' => $text_search
-                                        ]],
-
-                                    ],
-                                    'filter' => [
-                                        'bool' => [
-                                            'must' => [
-                                                ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
-                                                ]],
-                                                ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
-                                                ]]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'highlight' => [
-                                'fields' => [
-                                    ['co_quan' => [
-                                        'force_source' => true
-                                    ]]
-                                  //  '*' => (Object)[],
-                                ]
-                            ]
-                        ]
-                    ];
-
-                    $results = $client->search($params);
-                } else if($tinh_thanh == null && $chuc_danh != null){
-                    $params = [
-                        'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
-                        'from' => 0,   // <--- Start at #1
-                        'size' => 10000, // <--- And retrieve 10 docs
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['match' => [
-                                            'co_quan' => $text_search
-                                        ]],
-
-                                    ],
-                                    'filter' => [
-                                        'bool' => [
-                                            'must' => [
-
-                                                ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
-                                                ]]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'highlight' => [
-                                'fields' => [
-                                    ['co_quan' => [
-                                        'force_source' => true
-                                    ]]
-                                  //  '*' => (Object)[],
-                                ]
-                            ]
-                        ]
-                    ];
-
-                    $results = $client->search($params);
-                } else if($tinh_thanh != null && $chuc_danh == null){
-                    $params = [
-                        'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
-                        'from' => 0,   // <--- Start at #1
-                        'size' => 10000, // <--- And retrieve 10 docs
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['match' => [
-                                            'co_quan' => $text_search
-                                        ]],
-
-                                    ],
-                                    'filter' => [
-                                        'bool' => [
-                                            'must' => [
-                                                ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
-                                                ]],
-
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'highlight' => [
-                                'fields' => [
-                                    ['co_quan' => [
-                                        'force_source' => true
-                                    ]]
-                                  //  '*' => (Object)[],
-                                ]
-                            ]
-                        ]
-                    ];
-
-                    $results = $client->search($params);
-
-
-                } else if($tinh_thanh == null && $chuc_danh == null){
-                    $params = [
-                        'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
-                        'from' => 0,   // <--- Start at #1
-                        'size' => 10000, // <--- And retrieve 10 docs
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['match' => [
-                                            'co_quan' => $text_search
-                                        ]],
-
-                                    ]
-                                ]
-                            ],
-                            'highlight' => [
-                                'fields' => [
-                                    ['co_quan' => [
-                                        'force_source' => true
-                                    ]]
-                                  //  '*' => (Object)[],
-                                ]
-                            ]
-                        ]
-                    ];
-
-                    $results = $client->search($params);
-
-                }
-            } else if($tim_theo == 0){
-                    if($tinh_thanh != null && $chuc_danh != null){
-                    $params = [
-                        'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -677,7 +496,7 @@ class SearchController extends Controller
                                     'must' => [
                                         ['multi_match' => [
                                             'query' => $text_search,
-                                            'fields' => ['ho_va_ten^5','chuyen_nganh','co_quan','huong_nghien_cuu']
+                                            'fields' => ['ten^5','diem_noi_bat','tac_gia^4']
                                         ]],
 
                                     ],
@@ -685,10 +504,10 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
                                                 ]],
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -699,11 +518,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                        //dd($results);
-                } else if($tinh_thanh == null && $chuc_danh != null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -712,7 +530,7 @@ class SearchController extends Controller
                                     'must' => [
                                         ['multi_match' => [
                                             'query' => $text_search,
-                                            'fields' => ['ho_va_ten^5','chuyen_nganh','co_quan','huong_nghien_cuu']
+                                            'fields' => ['ten^5','diem_noi_bat','tac_gia^4']
                                         ]],
 
                                     ],
@@ -721,7 +539,7 @@ class SearchController extends Controller
                                             'must' => [
 
                                                 ['term' => [
-                                                    'hoc_vi.keyword' => $chuc_danh
+                                                    'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
                                                 ]]
                                             ]
                                         ]
@@ -732,10 +550,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh != null && $chuc_danh == null){
+                }else if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -744,7 +562,7 @@ class SearchController extends Controller
                                     'must' => [
                                         ['multi_match' => [
                                             'query' => $text_search,
-                                            'fields' => ['ho_va_ten^5','chuyen_nganh','co_quan','huong_nghien_cuu']
+                                            'fields' => ['ten^5','diem_noi_bat','tac_gia^4']
                                         ]],
 
                                     ],
@@ -752,9 +570,8 @@ class SearchController extends Controller
                                         'bool' => [
                                             'must' => [
                                                 ['term' => [
-                                                 'tinh_thanh.keyword' => $tinh_thanh
-                                                ]],
-
+                                                 'linh_vuc_khcn' => $linh_vuc_khcn
+                                                ]]
                                             ]
                                         ]
                                     ]
@@ -764,22 +581,21 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
-
-                } else if($tinh_thanh == null && $chuc_danh == null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che == 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
-                           'query' => [
+                            'query' => [
                                 'bool' => [
                                     'must' => [
                                         ['multi_match' => [
                                             'query' => $text_search,
-                                            'fields' => ['ho_va_ten^3','chuyen_nganh','co_quan','huong_nghien_cuu']
-                                        ]]
+                                            'fields' => ['ten^5','diem_noi_bat','tac_gia^4']
+                                        ]],
+
                                     ]
                                 ]
                             ]
@@ -787,43 +603,26 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-
                 }
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            // khong cho text nao truyen vao
-        } else if($text_search == ''){
-            if($tinh_thanh != null && $chuc_danh != null){
+        }else if($text_search == null){
+            if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
                             'query' => [
                                 'bool' => [
                                     'must' => [
+                                        ['match' => [
+                                            'linh_vuc_khcn' => $linh_vuc_khcn
+                                        ]],
+                                        ['match' => [
+                                            'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
+                                        ]]
 
-                                        ['match' => [
-                                            'tinh_thanh' => $tinh_thanh
-                                        ]],
-                                        ['match' => [
-                                            'hoc_vi' => $chuc_danh
-                                        ]],
                                     ]
                                 ]
                             ]
@@ -831,10 +630,10 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh == null && $chuc_danh != null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che != 0){
                     $params = [
                         'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
+                        'type' => 'bang_phat_minh_sang_che',
                         'from' => 0,   // <--- Start at #1
                         'size' => 10000, // <--- And retrieve 10 docs
                         'body' => [
@@ -843,7 +642,28 @@ class SearchController extends Controller
                                     'must' => [
 
                                         ['match' => [
-                                            'hoc_vi' => $chuc_danh
+                                            'loai_phat_minh_sang_che' => $loai_phat_minh_sang_che
+                                        ]]
+
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ];
+
+                    $results = $client->search($params);
+                }else if($linh_vuc_khcn != 0 && $loai_phat_minh_sang_che == 0){
+                    $params = [
+                        'index' => 'hcsdl_index',
+                        'type' => 'bang_phat_minh_sang_che',
+                        'from' => 0,   // <--- Start at #1
+                        'size' => 10000, // <--- And retrieve 10 docs
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['match' => [
+                                            'linh_vuc_khcn' => $linh_vuc_khcn
                                         ]]
                                     ]
                                 ]
@@ -852,80 +672,78 @@ class SearchController extends Controller
                     ];
 
                     $results = $client->search($params);
-                } else if($tinh_thanh != null && $chuc_danh == null){
-                    $params = [
-                        'index' => 'hcsdl_index',
-                        'type' => 'chuyen_gia_khcn',
-                        'from' => 0,   // <--- Start at #1
-                        'size' => 10000, // <--- And retrieve 10 docs
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-
-                                        ['match' => [
-                                            'tinh_thanh' => $tinh_thanh
-                                        ]]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ];
-
-                    $results = $client->search($params);
-
-
-                } else if($tinh_thanh == null && $chuc_danh == null){
+                }else if($linh_vuc_khcn == 0 && $loai_phat_minh_sang_che == 0){
                     $time_search += microtime(true);
 
-                        $result = chuyen_gia_khcn::paginate(10);
-                        //dd($result);
-                        return view('search_result.chuyen_gia')
-                        ->with([
-                            'data_mysql'=>true,
-                            'hoc_vi'=>$hv,
-                            'tinh_thanh'=>$tt,
-                            'datas'=>$result,
-                            'tim_theo'=>$tim_theo,
-                            'tinh_thanh_current' => $tinh_thanh,
-                            'hoc_vi_current' => $chuc_danh,
-                            'time_search' => $time_search,
-                            'text_search' => $text_search,
-                            ]);
+                    $result = bang_phat_minh_sang_che::select('ten','linh_vuc_san_pham.linh_vuc as linh_vuc','sobang_kyhieu','tac_gia','ngay_cong_bo','loai_phat_minh_sang_che.loai_phat_minh_sang_che as loai_phat_minh_sang_che','link')->join('loai_phat_minh_sang_che','loai_phat_minh_sang_che.id','=','bang_phat_minh_sang_che.loai_phat_minh_sang_che')->join('linh_vuc_san_pham','bang_phat_minh_sang_che.linh_vuc_khcn','=','linh_vuc_san_pham.id')->paginate(10);
 
-
+                    return view('search_result.phat_minh_sang_che')
+                            ->with([
+                                 'data_mysql'=>true,
+                                'linh_vuc'=>$linh_vuc,
+                                'loai_phat_minh'=>$loai_phat_minh,
+                                'datas'=>$result,
+                                'tim_theo' => $tim_theo,
+                                'loai_phat_minh_current' => $loai_phat_minh_sang_che,
+                                'linh_vuc_current' => $linh_vuc_khcn,
+                                'time_search' => $time_search,
+                                'text_search' => $text_search,
+                                ]);
                 }
-
-
-
         }
 
-
-    $time_search += microtime(true);
+        $time_search += microtime(true);
 
 
 
         $result = $results['hits']['hits'];
-//        dd($result);
-        $result = json_decode(json_encode($result), FALSE);
-        //dd($result);
-        $result = $this->paginate_customer($result,10);
-        //dd($result);
-    return view('search_result.chuyen_gia')
-    ->with([
-            'data_mysql'=>false,
-      'hoc_vi'=>$hv,
-      'tinh_thanh'=>$tt,
-      'datas'=>$result,
-      'tim_theo'=>$tim_theo,
-      'tinh_thanh_current' => $tinh_thanh,
-      'hoc_vi_current' => $chuc_danh,
-      'time_search' => $time_search,
-      'text_search' => $text_search,
-      ]);
+        //dd($results);
 
-  }
-  private function paginate_customer($items,$perPage)
+
+
+        ///////////////////////////////////////////////////////////
+         $result = json_decode(json_encode($result), FALSE);
+
+        $response_lv = linh_vuc_san_pham::complexSearch([
+            'index' => 'hcsdl_index',
+            'type' => 'linh_vuc_san_pham',
+            'body' => [
+                'query' => [
+                    'match_all' => (Object)[],
+                ],
+                'size' => 1000
+            ]
+        ]);
+       // dd($result);
+        foreach($result as $key => $value){
+            foreach($response_lv as $key2 => $value2){
+                if($value2->id == $value->_source->linh_vuc_khcn){
+                    $value->_source->linh_vuc_khcn = $value2->linh_vuc;
+
+                }
+
+            }
+
+        }
+        //convert object to arr
+        //$result = json_decode(json_encode($result), true);
+        ///////////////////////////////////////////////////////////////
+         $result = $this->paginate_customer($result,10);
+		return view('search_result.phat_minh_sang_che')
+		->with([
+            'data_mysql'=>false,
+			'linh_vuc'=>$linh_vuc,
+			'loai_phat_minh'=>$loai_phat_minh,
+			'datas'=>$result,
+			'tim_theo' => $tim_theo,
+			'loai_phat_minh_current' => $loai_phat_minh_sang_che,
+			'linh_vuc_current' => $linh_vuc_khcn,
+			'time_search' => $time_search,
+			'text_search' => $text_search,
+			]);
+	}
+
+	private function paginate_customer($items,$perPage)
     {
         $pageStart = \Request::get('page', 1);
         // Start displaying items from this number;
@@ -936,5 +754,4 @@ class SearchController extends Controller
 
         return new LengthAwarePaginator($itemsForCurrentPage, count($items), $perPage,Paginator::resolveCurrentPage(), array('path' => Paginator::resolveCurrentPath()));
     }
-
 }

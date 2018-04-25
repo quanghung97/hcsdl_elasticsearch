@@ -41,18 +41,7 @@
                   @endif
               </select>
             </li>
-            <li>
-              <select class="select-style" name='tinh_thanh_pho'>
-                <option value="">Tỉnh, thành phố</option>
-                @foreach($tinh_thanh as $tt)
-                  @if($tinh_thanh_current == $tt->tinh_thanh_pho)
-                    <option value="{{$tt->tinh_thanh_pho}}" selected="">{{$tt->tinh_thanh_pho}}</option>
-                  @else
-                    <option value="{{$tt->tinh_thanh_pho}}">{{$tt->tinh_thanh_pho}}</option>
-                  @endif
-                @endforeach
-              </select>
-            </li>
+
             <li>
               <select class="select-style" name="chuc_danh">
                 <option value="">Chức danh</option>
@@ -74,10 +63,7 @@
 	<!-- main content, display result -->
 
 		<div class="row col-md-12 div-content search_result_chuyen_gia">
-			<div class="search-info">
-				<span class="glyphicon glyphicon-search
-				"></span> Kết quả tìm kiếm chuyên gia KH&CN : {!! $datas->total() !!} trong {{ $time_search }} giây
-			</div>
+
 			<table class="dataTable table-hover table-responsive" id="myTable">
 				<thead class="head-dataTable">
 					<th class="no">Stt</th>
