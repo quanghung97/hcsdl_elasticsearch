@@ -63,7 +63,10 @@
 	<!-- main content, display result -->
 
 		<div class="row col-md-12 div-content search_result_chuyen_gia">
-
+      <div class="search-info">
+				<span class="glyphicon glyphicon-search
+				"></span> Kết quả tìm kiếm chuyên gia KH&CN : {!! $datas->total() !!} trong {{ $time_search }} giây
+			</div>
 			<table class="dataTable table-hover table-responsive" id="myTable">
 				<thead class="head-dataTable">
 					<th class="no">Stt</th>
